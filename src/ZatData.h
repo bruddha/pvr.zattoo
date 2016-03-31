@@ -68,12 +68,17 @@ struct PVRIptvEpgGenre
     std::string       strGenre;
 };
 
+enum ZatProvider
+{
+	Zattoo = 0,
+	Quickline = 1
+};
 
 
 class ZatData : public PLATFORM::CThread
 {
 public:
-    ZatData(std::string username, std::string password);
+    ZatData(ZatProvider provider, std::string username, std::string password);
     virtual ~ZatData();
 
     virtual int       GetChannelsAmount(void);
@@ -92,19 +97,13 @@ protected:
 
     virtual void loadAppId();
 
-
-
-
 //
 //    virtual bool                 LoadPlayList(void);
     virtual bool                 LoadEPG(time_t iStart, time_t iEnd);
 //    virtual bool                 LoadGenres(void);
 
-
-
     virtual ZatChannel*      FindChannel(int uniqueId);
     virtual PVRZattooChannelGroup* FindGroup(const std::string &strName);
-
 
 //    virtual PVRIptvEpgChannel*   FindEpg(const std::string &strId);
 //    virtual PVRIptvEpgChannel*   FindEpgForChannel(ZatChannel &channel);
@@ -130,11 +129,20 @@ private:
     std::string                       appToken;
     std::string                       cookie;
     std::string                       powerHash;
+	ZatProvider						  provider;
     std::string                       username;
     std::string                       password;
-    std::string                         cookiePath;
+    std::string                       cookiePath;
     std::string                       m_strLogoPath;
     std::vector<PVRZattooChannelGroup> channelGroups;
+	std::string                       baseUrl;
+	std::string                       helloUrl;
+    std::string                       loginUrl;
+    std::string                       appIdUrl;
+    std::string                       favoritesUrl;
+    std::string                       channelsUrl;
+    std::string                       watchUrl;
+    std::string                       epgUrl;
 
     void sendHello();
 

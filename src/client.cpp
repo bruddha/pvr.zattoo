@@ -28,6 +28,7 @@ std::string g_strClientPath = "";
 CHelper_libXBMC_addon *XBMC = NULL;
 CHelper_libXBMC_pvr   *PVR  = NULL;
 
+ZatProvider zatProvider	   = Zattoo;
 std::string zatUsername    = "";
 std::string zatPassword    = "";
 int         g_iStartNumber  = 1;
@@ -66,6 +67,13 @@ extern "C" {
 void ADDON_ReadSettings(void) {
     char buffer[1024];
     XBMC->Log(LOG_DEBUG, "Read settings");
+	if (XBMC->GetSetting("provider", &buffer))
+    {
+		if (0 == strcmp(buffer, "Quickline"))
+		{
+			zatProvider = Quickline;
+		}
+    }
     if (XBMC->GetSetting("username", &buffer))
     {
         zatUsername = buffer;
@@ -103,17 +111,15 @@ ADDON_STATUS ADDON_Create(void *hdl, void *props) {
 
     m_CurStatus = ADDON_STATUS_UNKNOWN;
 
-
-
-
     g_strClientPath = pvrprops->strClientPath;
     g_strUserPath = pvrprops->strUserPath;
 
+	zatProvider = Zattoo;
     zatUsername = "";
     zatPassword = "";
     ADDON_ReadSettings();
-XBMC->Log(LOG_DEBUG, "Create zat");
-    zat = new ZatData(zatUsername,zatPassword);
+	XBMC->Log(LOG_DEBUG, "Create zat");
+    zat = new ZatData(zatProvider, zatUsername, zatPassword);
     XBMC->Log(LOG_DEBUG, "zat created");
     m_CurStatus = ADDON_STATUS_OK;
     m_bCreated = true;

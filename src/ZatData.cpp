@@ -22,22 +22,16 @@
 #define D(x)
 #endif
 
-
-
 using namespace ADDON;
 using namespace std;
 
-
-
-
 void ZatData::sendHello() {
-
     ostringstream dataStream;
     dataStream << "uuid=888b4f54-c127-11e5-9912-ba0be0483c18&lang=en&format=json&client_app_token=" << appToken;
 
     HTTPSocketRaw *socket = new HTTPSocketRaw();
     Request request;
-    request.url = "zattoo.com/zapi/session/hello";
+    request.url = helloUrl;
     request.method = POST;
     request.body = dataStream.str();
     request.AddHeader("Cookie", cookie);
@@ -45,24 +39,16 @@ void ZatData::sendHello() {
     socket->Execute(request, response);
     cookie = response.cookie;
 
-
-
-
-
-
     //httpResponse resp = postRequest("/zapi/session/hello", data);
-
 }
 
 bool ZatData::login() {
-
-
     ostringstream dataStream;
     dataStream << "login=" << username << "&password=" << password << "&format=json";
 
     HTTPSocketRaw *socket = new HTTPSocketRaw();
     Request request;
-    request.url = "zattoo.com/zapi/account/login";
+    request.url = loginUrl;
     request.method = POST;
     request.body = dataStream.str();
     request.AddHeader("Cookie", cookie);
@@ -70,8 +56,6 @@ bool ZatData::login() {
     socket->Execute(request, response);
     cookie = response.cookie;
     std::string jsonString = response.body;
-
-
 
     Json::Value json;
     Json::Reader reader;
@@ -92,16 +76,12 @@ bool ZatData::login() {
     return true;
 }
 
-
-
 void ZatData::loadAppId() {
-
     HTTPSocket *httpSocket = new HTTPSocketRaw();
     Request request;
-    request.url = "zattoo.com";
+    request.url = appIdUrl;
     Response response;
     httpSocket->Execute(request, response);
-
 
     appToken = "";
 
@@ -121,14 +101,11 @@ void ZatData::loadAppId() {
     appToken = token;
 
     XBMC->Log(LOG_DEBUG, "Loaded App token %s", XBMC->UnknownToUTF8(appToken.c_str()));
-
 }
 
-
 Json::Value ZatData::loadFavourites() {
-
     ostringstream urlStream;
-    urlStream << "zattoo.com/zapi/channels/favorites";
+    urlStream << favoritesUrl;
 
     HTTPSocketRaw *socket = new HTTPSocketRaw();
     Request request;
@@ -147,15 +124,11 @@ Json::Value ZatData::loadFavourites() {
     return json["favorites"];
 }
 
-
-
 void ZatData::loadChannels() {
-
-
     Json::Value favs = loadFavourites();
 
     ostringstream urlStream;
-    urlStream << "zattoo.com/zapi/v2/cached/channels/" << powerHash << "?details=False";
+    urlStream << channelsUrl << powerHash << "?details=False";
 
     HTTPSocketRaw *socket = new HTTPSocketRaw();
     Request request;
@@ -228,23 +201,32 @@ int ZatData::GetChannelId(const char * strChannelName)
     return abs(iId);
 }
 
-
 int ZatData::GetChannelGroupsAmount() {
     return channelGroups.size();
 }
 
-ZatData::ZatData(std::string u, std::string p)  {
+ZatData::ZatData(ZatProvider prov, std::string u, std::string p)  {
+	provider = prov;
     username = u;
     password = p;
     m_iLastStart    = 0;
     m_iLastEnd      = 0;
-    cookie = "";
+    cookie = "";	
+	
+	baseUrl = "zattoo.com";
+	if (Quickline == prov)
+	{
+		baseUrl = "mobiltv.quickline.com";
+	}
+	helloUrl = baseUrl + "/zapi/session/hello";
+    loginUrl = baseUrl + "/zapi/account/login";
+    appIdUrl = baseUrl;
+    favoritesUrl = baseUrl + "/zapi/channels/favorites";
+    channelsUrl = baseUrl + "/zapi/v2/cached/channels/";
+    watchUrl = baseUrl + "/zapi/watch";
+    epgUrl = baseUrl + "/zapi/v2/cached/program/power_guide/";
 
-    cookiePath = GetUserFilePath("zatCookie.txt");
-
-
-    //httpResponse response = getRequest("zattoo.com/deinemama");
-    //cout << response.body;
+    cookiePath = GetUserFilePath("zatCookie.txt");	
 
     this->loadAppId();
     this->sendHello();
@@ -254,14 +236,12 @@ ZatData::ZatData(std::string u, std::string p)  {
     else {
         XBMC->QueueNotification(QUEUE_ERROR, "Zattoo Login fehlgeschlagen!");
     }
-
 }
 
 ZatData::~ZatData() {
     channelGroups.clear();
     
 }
-
 
 void *ZatData::Process(void) {
     return NULL;
@@ -337,33 +317,23 @@ PVR_ERROR ZatData::GetChannels(ADDON_HANDLE handle, bool bRadio) {
             strncpy(kodiChannel.strChannelName, channel.name.c_str(), sizeof(kodiChannel.strChannelName) - 1);
             kodiChannel.iEncryptionSystem = 0;
 
-
             strncpy(kodiChannel.strIconPath, channel.strLogoPath.c_str(), sizeof(kodiChannel.strIconPath) - 1);
 
-
             kodiChannel.bIsHidden         = false;
-
-
-
-
+			
             // self referencing so GetLiveStreamURL() gets triggered
             std::string streamURL;
             streamURL = ("pvr://stream/tv/zattoo.ts");
             strncpy(kodiChannel.strStreamURL, streamURL.c_str(), sizeof(kodiChannel.strStreamURL) - 1);
             //
 
-
             PVR->TransferChannelEntry(handle, &kodiChannel);
-
-
         }
     }
     return PVR_ERROR_NO_ERROR;
 }
 
-
 std::string ZatData::GetChannelStreamUrl(int uniqueId) {
-
     ZatChannel *channel = FindChannel(uniqueId);
     //XBMC->QueueNotification(QUEUE_INFO, "Getting URL for channel %s", XBMC->UnknownToUTF8(channel->name.c_str()));
 
@@ -372,7 +342,7 @@ std::string ZatData::GetChannelStreamUrl(int uniqueId) {
 
     HTTPSocketRaw *socket = new HTTPSocketRaw();
     Request request;
-    request.url = "zattoo.com/zapi/watch";
+    request.url = watchUrl;
     request.method = POST;
     request.body = dataStream.str();
     request.AddHeader("Cookie", cookie);
@@ -380,9 +350,7 @@ std::string ZatData::GetChannelStreamUrl(int uniqueId) {
     socket->Execute(request, response);
     cookie = response.cookie;
 
-
     std::string jsonString = response.body;
-
 
     Json::Value json;
     Json::Reader reader;
@@ -390,9 +358,7 @@ std::string ZatData::GetChannelStreamUrl(int uniqueId) {
 
     string url = json["stream"]["url"].asString();
     return url;
-
 }
-
 
 ZatChannel *ZatData::FindChannel(int uniqueId) {
     std::vector<PVRZattooChannelGroup>::iterator it;
@@ -410,14 +376,12 @@ ZatChannel *ZatData::FindChannel(int uniqueId) {
     return NULL;
 }
 
-
 int ZatData::findChannelNumber(int uniqueId) {
     ZatChannel *channel = FindChannel(uniqueId);
     return 0;
 }
 
 PVR_ERROR ZatData::GetEPGForChannel(ADDON_HANDLE handle, const PVR_CHANNEL &channel, time_t iStart, time_t iEnd) {
-
     ZatChannel *zatChannel = FindChannel(channel.iUniqueId);
 
     if (iStart > m_iLastStart || iEnd > m_iLastEnd)
@@ -430,7 +394,6 @@ PVR_ERROR ZatData::GetEPGForChannel(ADDON_HANDLE handle, const PVR_CHANNEL &chan
             m_iLastEnd = iEnd;
         }
     }
-
 
     std::vector<PVRIptvEpgEntry>::iterator it;
     for (it = zatChannel->epg.begin(); it != zatChannel->epg.end(); ++it)
@@ -476,20 +439,14 @@ PVR_ERROR ZatData::GetEPGForChannel(ADDON_HANDLE handle, const PVR_CHANNEL &chan
         tag.iFlags              = EPG_TAG_FLAG_UNDEFINED;
 
         PVR->TransferEpgEntry(handle, &tag);
-
     }
-
 
     return PVR_ERROR_NO_ERROR;
 }
 
-
 bool ZatData::LoadEPG(time_t iStart, time_t iEnd) {
-
-
 //    iStart -= (iStart % (3600/2)) - 86400; // Do s
 //    iEnd = iStart + 3600*3;
-
 
     //Do some time magic that the start date is not to far in the past because zattoo doesnt like that
     time_t tempStart = iStart - (iStart % (3600/2)) - 86400;
@@ -497,7 +454,7 @@ bool ZatData::LoadEPG(time_t iStart, time_t iEnd) {
 
     while(tempEnd < iEnd) {
         ostringstream urlStream;
-        urlStream << "zattoo.com/zapi/v2/cached/program/power_guide/" << powerHash << "?end=" << tempEnd << "&start=" << tempStart << "&format=json";
+        urlStream << epgUrl << powerHash << "?end=" << tempEnd << "&start=" << tempStart << "&format=json";
 
         HTTPSocket *socket = new HTTPSocketRaw();
         Request request;
@@ -515,16 +472,12 @@ bool ZatData::LoadEPG(time_t iStart, time_t iEnd) {
 
         //D(cout << json << endl);
 
-
-
         Json::Value channels = json["channels"];
 
         //Load the channel groups and channels
         for ( int index = 0; index < channels.size(); ++index ) {
-
             string cid = channels[index]["cid"].asString();
             for (int i = 0; i < channels[index]["programs"].size(); ++i) {
-
                 Json::Value program = channels[index]["programs"][i];
                 int channelId = GetChannelId(cid.c_str());
                 ZatChannel *channel = FindChannel(channelId);
@@ -551,19 +504,13 @@ bool ZatData::LoadEPG(time_t iStart, time_t iEnd) {
 
                 if (channel)
                     channel->epg.insert(channel->epg.end(), entry);
-
-
             }
         }
 
         tempStart = tempEnd;
         tempEnd = tempStart + 3600*5; //Add 5 hours
     }
-
-
-
-
-
+	
     return true;
 }
 
