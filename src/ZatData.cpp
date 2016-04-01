@@ -155,13 +155,13 @@ void ZatData::loadChannels() {
     PVRZattooChannelGroup favGroup;
     favGroup.name = "Favoriten";
     //Load the channel groups and channels
-    for (Json::ArrayIndex index = 0; index < groups.size(); ++index) {
+    for (Json::Value::ArrayIndex index = 0; index < groups.size(); ++index) {
         PVRZattooChannelGroup group;
         group.name = groups[index]["name"].asString();
         Json::Value channels = groups[index]["channels"];
-        for(Json::ArrayIndex i = 0; i < channels.size(); ++i) {
+        for(Json::Value::ArrayIndex i = 0; i < channels.size(); ++i) {
             Json::Value qualities = channels[i]["qualities"];
-            for(Json::ArrayIndex q = 0; q < qualities.size(); ++q) {
+            for(Json::Value::ArrayIndex q = 0; q < qualities.size(); ++q) {
                 if(qualities[q]["availability"].asString() == "available") {
                     ZatChannel channel;
                     channel.name = qualities[q]["title"].asString();
@@ -175,7 +175,7 @@ void ZatData::loadChannels() {
                     channel.strLogoPath.append(qualities[q]["logo_white_84"].asString());
                     group.channels.insert(group.channels.end(), channel);
                     //Yeah thats bad performance
-                    for (Json::ArrayIndex fav = 0; fav < favs.size(); fav++) {
+                    for (Json::Value::ArrayIndex fav = 0; fav < favs.size(); fav++) {
                         if (favs[fav].asString() == cid) {
                             favGroup.channels.insert(favGroup.channels.end(), channel);
                         }
@@ -475,9 +475,9 @@ bool ZatData::LoadEPG(time_t iStart, time_t iEnd) {
         Json::Value channels = json["channels"];
 
         //Load the channel groups and channels
-        for (Json::ArrayIndex index = 0; index < channels.size(); ++index) {
+        for (Json::Value::ArrayIndex index = 0; index < channels.size(); ++index) {
             string cid = channels[index]["cid"].asString();
-            for (Json::ArrayIndex i = 0; i < channels[index]["programs"].size(); ++i) {
+            for (Json::Value::ArrayIndex i = 0; i < channels[index]["programs"].size(); ++i) {
                 Json::Value program = channels[index]["programs"][i];
                 int channelId = GetChannelId(cid.c_str());
                 ZatChannel *channel = FindChannel(channelId);
@@ -497,7 +497,7 @@ bool ZatData::LoadEPG(time_t iStart, time_t iEnd) {
 
                 Json::Value genres = program["g"];
                 ostringstream generesStream;
-                for (Json::ArrayIndex genre = 0; genre < genres.size(); genre++) {
+                for (Json::Value::ArrayIndex genre = 0; genre < genres.size(); genre++) {
                     generesStream << genres[genre].asString() << " ";
                 }
                 entry.strGenreString = generesStream.str();
