@@ -136,7 +136,6 @@ private:
     std::string                       m_strLogoPath;
     std::vector<PVRZattooChannelGroup> channelGroups;
 	std::string                       baseUrl;
-	std::string                       appTokenRegex;
 	std::string                       helloUrl;
     std::string                       loginUrl;
     std::string                       appIdUrl;
