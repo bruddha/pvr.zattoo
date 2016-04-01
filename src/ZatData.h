@@ -102,7 +102,7 @@ protected:
     virtual bool                 LoadEPG(time_t iStart, time_t iEnd);
 //    virtual bool                 LoadGenres(void);
 
-    virtual ZatChannel*      FindChannel(int uniqueId);
+    virtual ZatChannel*          FindChannel(int uniqueId);
     virtual PVRZattooChannelGroup* FindGroup(const std::string &strName);
 
 //    virtual PVRIptvEpgChannel*   FindEpg(const std::string &strId);
@@ -136,6 +136,7 @@ private:
     std::string                       m_strLogoPath;
     std::vector<PVRZattooChannelGroup> channelGroups;
 	std::string                       baseUrl;
+	std::string                       appTokenRegex;
 	std::string                       helloUrl;
     std::string                       loginUrl;
     std::string                       appIdUrl;

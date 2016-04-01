@@ -88,7 +88,7 @@ void ZatData::loadAppId() {
     std::string html = response.body;
 
     std::smatch m;
-    std::regex e ("appToken.*\\'(.*)\\'");
+    std::regex e (appTokenRegex);
 
     std::string token = "";
 
@@ -214,13 +214,15 @@ ZatData::ZatData(ZatProvider prov, std::string u, std::string p)  {
     cookie = "";	
 	
 	baseUrl = "zattoo.com";
+	appTokenRegex = "appToken.*\\'(.*)\\'";
 	if (Quickline == prov)
 	{
 		baseUrl = "mobiltv.quickline.com";
+		appTokenRegex = "appToken.*\'(.*)\'";
 	}
 	helloUrl = baseUrl + "/zapi/session/hello";
     loginUrl = baseUrl + "/zapi/account/login";
-    appIdUrl = baseUrl;
+    appIdUrl = baseUrl + "/login";
     favoritesUrl = baseUrl + "/zapi/channels/favorites";
     channelsUrl = baseUrl + "/zapi/v2/cached/channels/";
     watchUrl = baseUrl + "/zapi/watch";
