@@ -214,13 +214,14 @@ ZatData::ZatData(ZatProvider prov, std::string u, std::string p)  {
     cookie = "";	
 	
 	baseUrl = "zattoo.com";
+    appIdUrl = baseUrl;
 	if (Quickline == prov)
 	{
-		baseUrl = "mobiltv.quickline.com";
+		baseUrl = "https://mobiltv.quickline.com";
+		appIdUrl = baseUrl + "/login";
 	}
 	helloUrl = baseUrl + "/zapi/session/hello";
     loginUrl = baseUrl + "/zapi/account/login";
-    appIdUrl = baseUrl + "/login";
     favoritesUrl = baseUrl + "/zapi/channels/favorites";
     channelsUrl = baseUrl + "/zapi/v2/cached/channels/";
     watchUrl = baseUrl + "/zapi/watch";

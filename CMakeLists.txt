@@ -10,17 +10,20 @@ find_package(kodi REQUIRED)
 find_package(kodiplatform REQUIRED)
 find_package(platform REQUIRED)
 find_package(JsonCpp REQUIRED)
+find_package(CURL REQUIRED)
 
 
-include_directories(${kodiplatform_INCLUDE_DIRS}
+include_directories(${CURL_INCLUDE_DIR}
+					${kodiplatform_INCLUDE_DIRS}
                     ${platform_INCLUDE_DIRS}
                     ${KODI_INCLUDE_DIR}
 					${JSONCPP_INCLUDE_DIRS}
                     ${PROJECT_SOURCE_DIR}/lib)
 
-set(DEPLIBS ${kodiplatform_LIBRARIES} 
-		${platform_LIBRARIES}
-		${JSONCPP_LIBRARIES}
+set(DEPLIBS ${CURL_LIBRARIES}
+			${kodiplatform_LIBRARIES} 
+			${platform_LIBRARIES}
+			${JSONCPP_LIBRARIES}
 )
 
 set(ZATTOO_SOURCES
@@ -35,4 +38,3 @@ set(ZATTOO_SOURCES
 build_addon(pvr.zattoo ZATTOO DEPLIBS)
 
 include(CPack)
-
